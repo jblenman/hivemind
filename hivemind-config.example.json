@@ -1,0 +1,35 @@
+{
+  "_comment": "Copy to hivemind-config.json and edit for your fleet. The real config is gitignored.",
+  "machines": {
+    "desktop": {
+      "host": "192.168.1.10",
+      "port": 11434,
+      "label": "Desktop with discrete GPU"
+    },
+    "laptop": {
+      "host": "192.168.1.11",
+      "port": 11434,
+      "label": "Laptop with discrete GPU"
+    }
+  },
+  "triage": {
+    "machine": "desktop",
+    "model": "granite3-moe:1b",
+    "default": "interactive",
+    "_comment": "Triage model classifies prompts in ~5s. Falls back to default if unavailable."
+  },
+  "routes": {
+    "quick": [
+      {"machine": "laptop", "model": "qwen2.5-coder:3b"},
+      {"machine": "desktop", "model": "qwen2.5-coder:3b"}
+    ],
+    "interactive": [
+      {"machine": "laptop", "model": "phi4:14b"},
+      {"machine": "desktop", "model": "qwen2.5-coder:7b"}
+    ],
+    "quality": [
+      {"machine": "laptop", "model": "gpt-oss:20b"},
+      {"machine": "desktop", "model": "gpt-oss:20b"}
+    ]
+  }
+}

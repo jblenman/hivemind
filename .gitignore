@@ -1,0 +1,23 @@
+# Local fleet config (real IPs/machine names — copy from .example.json)
+hivemind-config.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Session artifacts
+.hivemind/
+
+# Environment / secrets
+.env
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
