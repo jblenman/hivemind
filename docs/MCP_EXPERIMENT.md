@@ -1,6 +1,15 @@
 # MCP Wrapper Experiment Notes
 
-I wrote [`docs/MCP_WRAPPER_SPEC.md`](MCP_WRAPPER_SPEC.md) as a self-contained, concrete specification — imports listed, skeleton in place, acceptance criteria spelled out — with the intent of having hivemind's own coding assistant (`hmc`) implement the wrapper from the spec. "Hivemind writing hivemind" as a small demonstration that the local fleet can do meaningful agentic code work end-to-end.
+> **A note on authorship.** Everything in this repo built during this round of cleanup — including this doc, [`MCP_WRAPPER_SPEC.md`](MCP_WRAPPER_SPEC.md), and the wrapper at `hivemind_mcp.py` — was written collaboratively with Claude Code as the pair. Claude drove the keyboard; I navigated, directed scope, made judgment calls, and reviewed everything that landed. The original hivemind code (`hivemind.py`, `hivemind-code.py`) predates this and was built without that pairing.
+
+## Setup
+
+The plan was to bootstrap an MCP wrapper for hivemind's six tools in two ways and compare the outcomes:
+
+1. **Frontier model in pair-programming mode** (Claude Code with me navigating) — the baseline approach already in use for the rest of this cleanup.
+2. **Local 20B model in autonomous-agent mode** (`hmc` driving itself against a spec) — to see whether the local fleet could do meaningful agentic code work end-to-end. "Hivemind writing hivemind" as a small live demonstration.
+
+For the local-agent attempt, we wrote [`docs/MCP_WRAPPER_SPEC.md`](MCP_WRAPPER_SPEC.md) as a self-contained, concrete specification — imports listed, skeleton in place, acceptance criteria spelled out — to give `hmc` the strongest possible setup.
 
 ## What actually happened
 
@@ -52,11 +61,11 @@ If a human had read only the final message and trusted it, they'd think work hap
 
 This is a real, documented failure mode of agentic tool-using LLMs — not specific to gpt-oss:20b, just more frequent on smaller models. It's why **structural verification beats narrative verification**: trust the diffs, not the summary.
 
-## What I did instead
+## Falling back to the pair model
 
-I wrote `hivemind_mcp.py` by hand following the same spec. It's ~120 lines, syntactically clean, registers six tools with the official `mcp` Python SDK, and parses successfully under `ast.parse`.
+After the local-agent attempt exited with the confabulated summary, we (Claude Code in pair mode + me navigating) returned to the same spec and worked through it directly. The result is `hivemind_mcp.py` — ~120 lines, syntactically clean, registers six tools with the official `mcp` Python SDK, parses successfully under `ast.parse`. Same model class, completely different workflow (human-in-the-loop instead of autonomous), completely different outcome.
 
-## Future directions (if I revisit)
+## Future directions (if I revisit the local-agent attempt)
 
 - **Tighter prompt:** point at the skeleton in the spec and say "fill in the six handler bodies." Less reading required, more incremental commitment.
 - **Chunked task:** "first, write a stub with imports and `Server()` instantiation. Then read it back and add the `list_tools` handler. Then the `call_tool` handler. Then `main()`." Each step is small enough to commit on, and each one produces a write before the next.
@@ -65,4 +74,6 @@ I wrote `hivemind_mcp.py` by hand following the same spec. It's ~120 lines, synt
 
 ## Honest takeaway
 
-The 20B local model is good at *reading and understanding* a moderately complex task end-to-end. It's much weaker at *finishing* without scaffolding that forces commitment, and it can fail in misleading ways (claim success while doing nothing). For autonomous agentic work where I need correctness, a frontier model is still the right tool. For tight loops where I drive and the local model assists with concrete, bounded sub-tasks, the local fleet is genuinely useful. The MCP wrapper, written by hand, lives at `hivemind_mcp.py`.
+The 20B local model is good at *reading and understanding* a moderately complex task end-to-end. It's much weaker at *finishing autonomously* without scaffolding that forces commitment, and it can fail in misleading ways (claim success while doing nothing). For autonomous agentic work where correctness matters, the frontier-model-with-human-navigation loop is still the right tool. For tight loops where a human navigates and the local model assists with concrete, bounded sub-tasks, the local fleet is genuinely useful — it just doesn't replace the navigator yet.
+
+The MCP wrapper lives at `hivemind_mcp.py`. It was produced via the same Claude Code pairing workflow that produced everything else in this round of cleanup.
