@@ -52,6 +52,8 @@ echo "prompt" | hm                      # pipe input
 
 Triage uses `granite3-moe:1b` (~5s) to classify prompt complexity. Each route has a fallback chain — if the primary machine is offline, it tries the next.
 
+The choice of model per route is informed by [`ollama-benchmark`](https://github.com/jblenman/ollama-benchmark) — see its [FINDINGS.md](https://github.com/jblenman/ollama-benchmark/blob/main/FINDINGS.md) for the data behind these picks (33 prompts × 9 categories × 24 models, CPU and GPU).
+
 ### Flags
 
 | Flag | Description |
