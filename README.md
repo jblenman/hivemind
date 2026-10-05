@@ -269,7 +269,7 @@ claude mcp add --scope user hivemind -- py "C:\path\to\hivemind\hivemind_mcp.py"
 
 The tools appear as `mcp__hivemind__<tool>`.
 
-**B. Install it as a plugin.** The repository is a Claude Code plugin (`.claude-plugin/plugin.json` plus `.mcp.json`).
+**B. Install it as a plugin.** The repository is a Claude Code plugin: `.claude-plugin/plugin.json` declares the MCP server inline (`mcpServers`), so a clone carries no root `.mcp.json` that Claude Code would otherwise offer to approve as a project server.
 
 - One session, nothing installed: `claude --plugin-dir /path/to/hivemind`
 - Permanently, from a plugin marketplace that lists this repository: `claude plugin install hivemind@<marketplace>`. To list it in a marketplace you maintain, add this entry to its `marketplace.json`:
@@ -294,8 +294,6 @@ The tools appear as `mcp__plugin_hivemind_hivemind__<tool>`. A plugin installed 
 }
 ```
 
-**Working inside a clone of this repository?** Claude Code also reads the repo's `.mcp.json` as a project server and offers to approve it (`claude mcp list` warns `Missing environment variables: CLAUDE_PLUGIN_ROOT`). That file is the plugin's configuration and only works when loaded as a plugin, so decline it and use `claude --plugin-dir .` or option A.
-
 ### Configuration
 
 The server uses the first config file it finds:
@@ -313,11 +311,11 @@ The format is the one in [Fleet Configuration](#fleet-configuration). One option
 | `HIVEMIND_CONFIG` | Path of the config file (checked after `--config`). |
 | `HIVEMIND_MCP_LOG` | Log file path, or `off`. Default `~/.hivemind/mcp_server.log`, rotated at 2 MB. |
 | `HIVEMIND_MCP_DEBUG` | `1` adds debug detail to the log and to stderr. |
-| `KIT_PYTHON` | Interpreter the plugin's `.mcp.json` runs; default `python3`. A shared name, so one setting can serve several plugins. |
+| `KIT_PYTHON` | Interpreter the plugin's server entry (`plugin.json` → `mcpServers`) runs; default `python3`. A shared name, so one setting can serve several plugins. |
 
 For option A, pass variables with `claude mcp add --env NAME=value ...`; Claude Code also passes its own environment to the servers it starts.
 
-**Windows interpreter.** `python3` on Windows is usually missing or a Microsoft Store / PyManager alias stub, which can fail to start from elevated shells. For the plugin, set the interpreter in `~/.claude/settings.json` (Claude Code's `env` setting reaches the plugin's `.mcp.json`):
+**Windows interpreter.** `python3` on Windows is usually missing or a Microsoft Store / PyManager alias stub, which can fail to start from elevated shells. For the plugin, set the interpreter in `~/.claude/settings.json` (Claude Code's `env` setting reaches the plugin's server entry):
 
 ```json
 { "env": { "KIT_PYTHON": "py" } }
@@ -332,7 +330,7 @@ python3 hivemind_mcp.py --self-test   # offline; stderr shows "tools: health, li
 python3 hivemind_mcp.py --health      # which hosts answer, as JSON on stderr
 claude mcp get hivemind               # option A: "Status: ✔ Connected"
 claude -p "Call the hivemind health tool once and list the hosts that answer." --allowedTools mcp__hivemind
-python3 tests/test_mcp_server.py      # 47 tests; the live ones skip when no Ollama answers
+python3 tests/test_mcp_server.py      # 49 tests; the live ones skip when no Ollama answers
 ```
 
 For option B, run the `claude -p` line with `--plugin-dir /path/to/hivemind` and `--allowedTools mcp__plugin_hivemind_hivemind`. Put the prompt before `--allowedTools`: that option takes several values and would swallow a prompt placed after it. The live tests use `localhost:11434` (or your config's default machine); point them elsewhere with `HIVEMIND_TEST_OLLAMA=host:port`, and set `HIVEMIND_TEST_MODEL` if `granite3-moe:1b` isn't installed.
@@ -393,7 +391,7 @@ The first MCP version of this file, a wrapper around the six coding tools, was t
 | `hivemind.py` | Router — triage, routing, streaming |
 | `hivemind-code.py` | Coding assistant — tools, agent loop, sessions |
 | `hivemind_mcp.py` | MCP server: the models as tools (`health`, `list_models`, `ask_local`, `route`, `embed`); `hmc`'s six tools with `--code-tools` |
-| `.claude-plugin/plugin.json`, `.mcp.json` | Claude Code plugin manifest and its MCP server entry |
+| `.claude-plugin/plugin.json` | Claude Code plugin manifest, with the MCP server entry inline |
 | `tests/test_mcp_server.py` | Tests for the MCP server (stdlib `unittest`) |
 | `hivemind-config.example.json` | Fleet config template — copy to `hivemind-config.json` |
 | `install.py` | Cross-platform PATH installer |

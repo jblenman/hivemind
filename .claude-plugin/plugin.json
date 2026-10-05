@@ -6,5 +6,19 @@
     "name": "hivemind contributors"
   },
   "license": "MIT",
-  "keywords": ["ollama", "mcp", "local-models", "llm-router", "embeddings"]
+  "keywords": [
+    "ollama",
+    "mcp",
+    "local-models",
+    "llm-router",
+    "embeddings"
+  ],
+  "mcpServers": {
+    "hivemind": {
+      "command": "${KIT_PYTHON:-python3}",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/hivemind_mcp.py"
+      ]
+    }
+  }
 }

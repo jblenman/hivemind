@@ -277,6 +277,49 @@ class ErrorPathTests(unittest.TestCase):
             self.assertTrue(is_error(r), host)
             self.assertIn("private-network", text_of(r), host)
 
+    def test_link_local_mapped_and_unresolvable_refused(self):
+        # Link-local (the cloud metadata range), IPv4-mapped public, unspecified, CGNAT and
+        # unresolvable names are refused; a name is trusted only through its resolved addresses.
+        for h in ("169.254.169.254", "::ffff:8.8.8.8", "fe80::1", "0.0.0.0", "100.64.0.1",
+                  "no-such-host-xyz.invalid", "no-such-bare-host-xyz"):
+            self.assertFalse(S._is_private_address(h), h)
+        for h in ("127.0.0.1", "10.0.0.7", "172.16.5.5", "::ffff:10.0.0.7",
+                  "fd00::1", "localhost"):
+            self.assertTrue(S._is_private_address(h), h)
+
+    def test_route_falls_through_on_generation_timeout(self):
+        # A generation timeout on one target must not abort the call; the next target is tried.
+        S.set_config({"machines": {"box": {"host": "10.0.0.7", "port": 11434},
+                                   "spare": {"host": "10.0.0.8", "port": 11435}},
+                      "triage": {"machine": "box", "model": "m", "default": "quick"},
+                      "routes": {"quick": [{"machine": "box", "model": "m"},
+                                           {"machine": "spare", "model": "m"}]}}, "(two targets)")
+        orig = (S.get_tags, S.model_present, S.generate)
+
+        def fake_generate(machine, host, port, model, prompt, system, max_tokens, temperature, timeout_s):
+            if host == "10.0.0.7":
+                raise S.GenerationTimeout("10.0.0.7:11434/api/generate timed out after 1s")
+            return {"machine": machine, "model": model, "response": "ok"}
+
+        def always_timeout(*a, **k):
+            raise S.GenerationTimeout("timed out")
+        try:
+            S.get_tags = lambda host, port: []
+            S.model_present = lambda model, tags: True
+            S.generate = fake_generate
+            tier = "quick"
+            out = S.tool_route({"prompt": "hello", "tier": tier})
+            self.assertEqual(out["machine"], "spare")
+            self.assertTrue(out["fallback_path"][0]["result"].startswith("timeout"), out["fallback_path"])
+            self.assertEqual(out["fallback_path"][-1]["result"], "answered")
+            S.generate = always_timeout
+            with self.assertRaises(S.ToolError) as cm:
+                S.tool_route({"prompt": "hello", "tier": tier})
+            self.assertIn("no target", str(cm.exception))
+        finally:
+            S.get_tags, S.model_present, S.generate = orig
+            use_test_config()
+
     def test_private_hosts_resolve(self):
         cfg = S.load_config()
         self.assertEqual(S.resolve_host(None, cfg), ("box", "10.0.0.7", 11434))

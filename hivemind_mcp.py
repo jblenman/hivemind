@@ -258,16 +258,42 @@ def machine_address(name: str, m: Any) -> Tuple[str, int]:
     return str(host), port
 
 
+def _ip_allowed(ip: Any) -> bool:
+    """Loopback and RFC 1918 / ULA addresses only. Link-local is refused on purpose
+    (169.254.0.0/16 and fe80::/10 hold the cloud metadata endpoints — the classic
+    SSRF target), as are CGNAT, multicast, unspecified and reserved ranges."""
+    mapped = getattr(ip, "ipv4_mapped", None) or getattr(ip, "sixtofour", None)
+    if mapped is not None:                      # ::ffff:a.b.c.d is judged as a.b.c.d
+        ip = mapped
+    if ip.is_loopback:
+        return True
+    if ip.is_link_local or ip.is_multicast or ip.is_unspecified or ip.is_reserved:
+        return False
+    return bool(ip.is_private)
+
+
 def _is_private_address(host: str) -> bool:
+    """An IP literal is judged directly; a name (bare or dotted) is trusted only when
+    every address it resolves to is allowed — a bare name can resolve anywhere through
+    a search domain, so the name itself proves nothing. Unresolvable names are refused."""
     try:
-        ip = ipaddress.ip_address(host)
-        return ip.is_private or ip.is_loopback or ip.is_link_local
+        return _ip_allowed(ipaddress.ip_address(host))
     except ValueError:
         pass
-    h = host.lower()
-    if h == "localhost" or "." not in h:      # bare names resolve on the local network
+    h = host.lower().rstrip(".")
+    if h == "localhost":
         return True
-    return h.endswith((".local", ".lan", ".home", ".home.arpa", ".internal", ".localhost"))
+    try:
+        infos = socket.getaddrinfo(h, None)
+    except (OSError, UnicodeError):
+        return False
+    addrs = {ai[4][0].split("%", 1)[0] for ai in infos if ai[4]}
+    if not addrs:
+        return False
+    try:
+        return all(_ip_allowed(ipaddress.ip_address(a)) for a in addrs)
+    except ValueError:
+        return False
 
 
 def resolve_host(host: Optional[str], cfg: Dict[str, Any]) -> Tuple[str, str, int]:
@@ -601,8 +627,10 @@ def tool_route(args: Dict[str, Any]) -> Dict[str, Any]:
             tried.append({"machine": mname, "model": model, "result": "failed: {}".format(e)})
             continue
         except GenerationTimeout as e:
+            # A slow or wedged host is the likeliest failure, so it falls through to the next
+            # target like an unreachable one; the call's worst case is len(targets) × timeout_s.
             tried.append({"machine": mname, "model": model, "result": "timeout: {}".format(e)})
-            raise ToolError("{} (tier {}; tried: {})".format(e, tier, json.dumps(tried)))
+            continue
         tried.append({"machine": mname, "model": model, "result": "answered"})
         out["tier"] = tier
         out["tier_chosen_by"] = how
