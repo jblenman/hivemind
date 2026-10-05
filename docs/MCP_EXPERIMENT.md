@@ -1,5 +1,7 @@
 # MCP Wrapper Experiment Notes
 
+> **Status (October 2026):** the wrapper these notes describe has been replaced. `hivemind_mcp.py` is now a standard-library MCP server that serves the local models as tools (`health`, `list_models`, `ask_local`, `route`, `embed`); the six tools discussed here remain available with `--code-tools`. The confabulation finding below is why that server tells its client to treat local-model output as advisory. The original wrapper is in git history (commit `2896e7b`); see the [README](../README.md) for the current server.
+
 > **A note on authorship.** Everything in this repo built during this round of cleanup — including this doc, [`MCP_WRAPPER_SPEC.md`](MCP_WRAPPER_SPEC.md), and the wrapper at `hivemind_mcp.py` — was written collaboratively with Claude Code as the pair. Claude drove the keyboard; I navigated, directed scope, made judgment calls, and reviewed everything that landed. The original hivemind code (`hivemind.py`, `hivemind-code.py`) predates this and was built without that pairing.
 
 ## Setup

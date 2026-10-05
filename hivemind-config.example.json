@@ -2,12 +2,12 @@
   "_comment": "Copy to hivemind-config.json and edit for your fleet. The real config is gitignored.",
   "machines": {
     "desktop": {
-      "host": "192.168.1.10",
+      "host": "10.0.0.10",
       "port": 11434,
       "label": "Desktop with discrete GPU"
     },
     "laptop": {
-      "host": "192.168.1.11",
+      "host": "10.0.0.11",
       "port": 11434,
       "label": "Laptop with discrete GPU"
     }

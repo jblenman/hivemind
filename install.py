@@ -8,8 +8,8 @@ Usage:
     python install.py --check   # Check if already installed
 
 Works on Windows (modifies user PATH via registry) and macOS/Linux
-(appends to shell profile). Google Drive sync means the scripts are
-always up to date — this just makes them callable from anywhere.
+(appends to shell profile). The commands run from this folder, so a
+`git pull` keeps them up to date — this just makes them callable from anywhere.
 """
 
 import sys

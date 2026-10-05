@@ -1,5 +1,7 @@
 # MCP Wrapper for Hivemind — Implementation Spec
 
+> **Status (October 2026):** this spec describes the first `hivemind_mcp.py`, kept here as the record of the experiment in [`MCP_EXPERIMENT.md`](MCP_EXPERIMENT.md). It has been replaced by a standard-library MCP server that serves the local models as tools; the six tools specified below are still available with `--code-tools`, without the `mcp` package. See "Use the hivemind from Claude Code (MCP)" in the [README](../README.md). The original wrapper is in git history (commit `2896e7b`).
+
 ## Goal
 
 Expose Hivemind's six existing tools (`read_file`, `write_file`, `edit_file`, `list_files`, `search_files`, `run_command`) as an MCP server over stdio, so any MCP-aware client (Claude Desktop, Claude Code, etc.) can call them.
