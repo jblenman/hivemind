@@ -1,0 +1,10 @@
+{
+  "name": "hivemind",
+  "version": "0.2.0",
+  "description": "Your Ollama models as Claude Code tools: health, list_models, ask_local, route (quick / interactive / quality tiers with fallback) and embed, from a stdlib MCP server. Local-model output is advisory: a draft to check, never a gate.",
+  "author": {
+    "name": "hivemind contributors"
+  },
+  "license": "MIT",
+  "keywords": ["ollama", "mcp", "local-models", "llm-router", "embeddings"]
+}

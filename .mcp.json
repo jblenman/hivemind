@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "hivemind": {
+      "command": "${KIT_PYTHON:-python3}",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/hivemind_mcp.py"]
+    }
+  }
+}
